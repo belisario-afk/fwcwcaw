@@ -3,8 +3,8 @@
  * Uses Web Audio API with HRTF panning model
  */
 
-// Movement pattern types - including crazy euphoric patterns
-export type PatternType = 'orbit' | 'pendulum' | 'figure8' | 'spiral' | 'wave' | 'bounce' | 'random' | 'zigzag' | 'chaos' | 'vortex';
+// Movement pattern types for complex 360 orbiting
+export type PatternType = 'fullOrbit360' | 'helixSpiral' | 'figure8Complex' | 'waveSurround' | 'chaosOrbit';
 
 // Movement preset interface - animated spatial patterns
 export interface MovementPreset {
@@ -16,72 +16,26 @@ export interface MovementPreset {
   radiusX: number;
   radiusY: number;
   radiusZ: number;
-  speed: number; // Cycles per second
+  speed: number; // Cycles per second (lower = longer duration)
   phase: number; // Starting phase offset (0-1)
 }
 
-// 30 CRAZY EUPHORIC Movement presets - wild orbits, zigzags, inside head, over head
+// 5 COMPLEX 360-DEGREE ORBITING PRESETS - Long-lasting, truly moving patterns
 export const MOVEMENT_PRESETS: MovementPreset[] = [
-  // CRAZY ZIGZAG - wild ear to ear zigzag
-  { name: 'preset1', pattern: 'zigzag', centerX: 0, centerY: 1.65, centerZ: 0, radiusX: 0.5, radiusY: 0.3, radiusZ: 0.4, speed: 1.2, phase: 0 },
-  // VORTEX OVERHEAD - spinning above and around head
-  { name: 'preset2', pattern: 'vortex', centerX: 0, centerY: 1.9, centerZ: 0, radiusX: 0.6, radiusY: 0.4, radiusZ: 0.6, speed: 0.8, phase: 0 },
-  // CHAOS INSIDE HEAD - random inside skull sensation
-  { name: 'preset3', pattern: 'chaos', centerX: 0, centerY: 1.7, centerZ: 0, radiusX: 0.15, radiusY: 0.15, radiusZ: 0.15, speed: 2.0, phase: 0 },
-  // WILD FULL BODY ZIGZAG - head to chest crazy
-  { name: 'preset4', pattern: 'zigzag', centerX: 0, centerY: 1.4, centerZ: 0, radiusX: 0.8, radiusY: 0.6, radiusZ: 0.5, speed: 1.5, phase: 0 },
-  // EUPHORIC SPIRAL DOWN - dizzying descent
-  { name: 'preset5', pattern: 'spiral', centerX: 0, centerY: 1.5, centerZ: 0, radiusX: 0.7, radiusY: 0.8, radiusZ: 0.7, speed: 0.6, phase: 0 },
-  // NECK CHAOS - wild neck area movement
-  { name: 'preset6', pattern: 'chaos', centerX: 0, centerY: 1.5, centerZ: 0, radiusX: 0.3, radiusY: 0.2, radiusZ: 0.3, speed: 1.8, phase: 0 },
-  // OVERHEAD FIGURE 8 - above head infinity
-  { name: 'preset7', pattern: 'figure8', centerX: 0, centerY: 2.0, centerZ: 0, radiusX: 0.5, radiusY: 0.3, radiusZ: 0.5, speed: 0.7, phase: 0 },
-  // EXTREME EAR ZIGZAG - fast ear switching
-  { name: 'preset8', pattern: 'zigzag', centerX: 0, centerY: 1.65, centerZ: 0, radiusX: 0.25, radiusY: 0.1, radiusZ: 0.2, speed: 2.5, phase: 0 },
-  // VORTEX NECK - spinning around neck
-  { name: 'preset9', pattern: 'vortex', centerX: 0, centerY: 1.5, centerZ: 0, radiusX: 0.25, radiusY: 0.15, radiusZ: 0.25, speed: 1.0, phase: 0 },
-  // INSIDE HEAD ORBIT - deep inside sensation
-  { name: 'preset10', pattern: 'orbit', centerX: 0, centerY: 1.7, centerZ: 0, radiusX: 0.08, radiusY: 0.08, radiusZ: 0.08, speed: 1.5, phase: 0 },
-  // CHEST ZIGZAG CHAOS - wild chest movement
-  { name: 'preset11', pattern: 'zigzag', centerX: 0, centerY: 1.2, centerZ: 0.15, radiusX: 0.4, radiusY: 0.3, radiusZ: 0.2, speed: 1.3, phase: 0 },
-  // MEGA ORBIT - huge circle around entire body
-  { name: 'preset12', pattern: 'orbit', centerX: 0, centerY: 1.5, centerZ: 0, radiusX: 1.5, radiusY: 0.5, radiusZ: 1.5, speed: 0.4, phase: 0 },
-  // UP DOWN EXTREME - vertical euphoria
-  { name: 'preset13', pattern: 'bounce', centerX: 0, centerY: 1.5, centerZ: 0, radiusX: 0.2, radiusY: 1.0, radiusZ: 0.2, speed: 1.2, phase: 0 },
-  // RANDOM EVERYWHERE - unpredictable chaos
-  { name: 'preset14', pattern: 'random', centerX: 0, centerY: 1.5, centerZ: 0, radiusX: 1.0, radiusY: 0.8, radiusZ: 1.0, speed: 1.5, phase: 0 },
-  // TORNADO VORTEX - spinning upward
-  { name: 'preset15', pattern: 'vortex', centerX: 0, centerY: 1.6, centerZ: 0, radiusX: 0.8, radiusY: 0.6, radiusZ: 0.8, speed: 1.2, phase: 0 },
-  // CRAZY FIGURE 8 3D - wild infinity in all axes
-  { name: 'preset16', pattern: 'figure8', centerX: 0, centerY: 1.6, centerZ: 0, radiusX: 0.6, radiusY: 0.4, radiusZ: 0.6, speed: 0.9, phase: 0.25 },
-  // BEHIND TO FRONT ZIGZAG - front/back chaos
-  { name: 'preset17', pattern: 'zigzag', centerX: 0, centerY: 1.65, centerZ: 0, radiusX: 0.15, radiusY: 0.1, radiusZ: 0.6, speed: 1.8, phase: 0 },
-  // SKULL INTERIOR - tiny inside head
-  { name: 'preset18', pattern: 'chaos', centerX: 0, centerY: 1.7, centerZ: 0, radiusX: 0.1, radiusY: 0.1, radiusZ: 0.1, speed: 2.5, phase: 0 },
-  // ROLLERCOASTER - up down side crazy
-  { name: 'preset19', pattern: 'wave', centerX: 0, centerY: 1.5, centerZ: 0, radiusX: 0.8, radiusY: 0.7, radiusZ: 0.5, speed: 0.8, phase: 0 },
-  // OVERHEAD CHAOS - wild above head
-  { name: 'preset20', pattern: 'chaos', centerX: 0, centerY: 2.1, centerZ: 0, radiusX: 0.5, radiusY: 0.3, radiusZ: 0.5, speed: 1.5, phase: 0 },
-  // EXTREME PENDULUM - wide fast swing
-  { name: 'preset21', pattern: 'pendulum', centerX: 0, centerY: 1.6, centerZ: 0, radiusX: 1.2, radiusY: 0.3, radiusZ: 0.4, speed: 1.5, phase: 0 },
-  // 360 VORTEX - complete surrounding spin
-  { name: 'preset22', pattern: 'vortex', centerX: 0, centerY: 1.65, centerZ: 0, radiusX: 0.4, radiusY: 0.2, radiusZ: 0.4, speed: 1.8, phase: 0 },
-  // NECK TO HEAD ZIGZAG - vertical zigzag
-  { name: 'preset23', pattern: 'zigzag', centerX: 0, centerY: 1.6, centerZ: 0.1, radiusX: 0.2, radiusY: 0.4, radiusZ: 0.15, speed: 2.0, phase: 0 },
-  // EUPHORIC DESCENT - falling sensation
-  { name: 'preset24', pattern: 'spiral', centerX: 0, centerY: 1.8, centerZ: 0, radiusX: 0.5, radiusY: 0.9, radiusZ: 0.5, speed: 0.5, phase: 0 },
-  // RAPID ORBIT - super fast circle
-  { name: 'preset25', pattern: 'orbit', centerX: 0, centerY: 1.65, centerZ: 0, radiusX: 0.35, radiusY: 0.1, radiusZ: 0.35, speed: 2.0, phase: 0 },
-  // MEGA ZIGZAG ALL - extreme full range
-  { name: 'preset26', pattern: 'zigzag', centerX: 0, centerY: 1.5, centerZ: 0, radiusX: 1.0, radiusY: 0.8, radiusZ: 0.8, speed: 1.0, phase: 0 },
-  // INSIDE OUT VORTEX - center expanding
-  { name: 'preset27', pattern: 'vortex', centerX: 0, centerY: 1.7, centerZ: 0, radiusX: 0.3, radiusY: 0.3, radiusZ: 0.3, speed: 1.5, phase: 0 },
-  // BRAIN TICKLE - tiny fast inside
-  { name: 'preset28', pattern: 'random', centerX: 0, centerY: 1.7, centerZ: 0, radiusX: 0.12, radiusY: 0.12, radiusZ: 0.12, speed: 3.0, phase: 0 },
-  // HYPERDRIVE - extreme speed orbit
-  { name: 'preset29', pattern: 'orbit', centerX: 0, centerY: 1.6, centerZ: 0, radiusX: 0.5, radiusY: 0.3, radiusZ: 0.5, speed: 2.5, phase: 0 },
-  // ULTIMATE CHAOS - maximum randomness
-  { name: 'preset30', pattern: 'chaos', centerX: 0, centerY: 1.5, centerZ: 0, radiusX: 1.2, radiusY: 1.0, radiusZ: 1.2, speed: 2.0, phase: 0 },
+  // PRESET 1: Full 360 Head Orbit - Complete circle around head, slow and immersive
+  { name: 'preset1', pattern: 'fullOrbit360', centerX: 0, centerY: 1.65, centerZ: 0, radiusX: 0.8, radiusY: 0.3, radiusZ: 0.8, speed: 0.08, phase: 0 },
+  
+  // PRESET 2: Helix Spiral - Spiraling up and down while orbiting 360
+  { name: 'preset2', pattern: 'helixSpiral', centerX: 0, centerY: 1.5, centerZ: 0, radiusX: 0.7, radiusY: 0.6, radiusZ: 0.7, speed: 0.06, phase: 0 },
+  
+  // PRESET 3: Complex Figure-8 - 3D figure-8 that covers full 360 space
+  { name: 'preset3', pattern: 'figure8Complex', centerX: 0, centerY: 1.6, centerZ: 0, radiusX: 0.9, radiusY: 0.5, radiusZ: 0.9, speed: 0.05, phase: 0 },
+  
+  // PRESET 4: Wave Surround - Undulating wave that circles entire head/body
+  { name: 'preset4', pattern: 'waveSurround', centerX: 0, centerY: 1.55, centerZ: 0, radiusX: 1.0, radiusY: 0.4, radiusZ: 1.0, speed: 0.07, phase: 0 },
+  
+  // PRESET 5: Chaos Orbit - Unpredictable but continuous 360 movement
+  { name: 'preset5', pattern: 'chaosOrbit', centerX: 0, centerY: 1.6, centerZ: 0, radiusX: 0.85, radiusY: 0.5, radiusZ: 0.85, speed: 0.04, phase: 0 },
 ];
 
 class AudioEngine {
@@ -115,8 +69,6 @@ class AudioEngine {
   private animationStartTime: number = 0;
   private isAnimating: boolean = false;
   private animationSpeed: number = 1; // Global speed multiplier
-  private lastRandomUpdate: number = 0;
-  private randomTarget = { x: 0, y: 0, z: 0 };
 
   // Frequency band ranges
   private readonly SAMPLE_RATE = 44100;
@@ -334,11 +286,6 @@ class AudioEngine {
       this.activePreset = preset;
       this.animationStartTime = performance.now();
       this.isAnimating = true;
-      this.randomTarget = { 
-        x: preset.centerX, 
-        y: preset.centerY, 
-        z: preset.centerZ 
-      };
     }
   }
 
@@ -380,9 +327,10 @@ class AudioEngine {
   }
 
   /**
-   * Calculate position based on movement pattern
+   * Calculate position based on movement pattern - 5 COMPLEX 360-DEGREE PATTERNS
    */
   private calculatePatternPosition(preset: MovementPreset, time: number): { x: number; y: number; z: number } {
+    // Use raw time for smoother, longer-lasting movements
     const t = time * preset.speed * this.animationSpeed * Math.PI * 2;
     const phase = preset.phase * Math.PI * 2;
     
@@ -391,112 +339,82 @@ class AudioEngine {
     let z = preset.centerZ;
 
     switch (preset.pattern) {
-      case 'orbit': {
-        // Circular orbit in XZ plane
+      case 'fullOrbit360': {
+        // FULL 360 ORBIT - Complete smooth circle around the listener
+        // Takes ~12 seconds for full rotation at default speed
         x += Math.cos(t + phase) * preset.radiusX;
-        y += Math.sin(t * 0.5 + phase) * preset.radiusY;
+        y += Math.sin(t * 0.3 + phase) * preset.radiusY; // Gentle vertical wave
         z += Math.sin(t + phase) * preset.radiusZ;
         break;
       }
 
-      case 'pendulum': {
-        // Swinging motion
-        x += Math.sin(t + phase) * preset.radiusX;
-        y += Math.sin(t * 2 + phase) * preset.radiusY * 0.5;
-        z += Math.sin(t * 0.5 + phase) * preset.radiusZ;
+      case 'helixSpiral': {
+        // HELIX SPIRAL - Continuous spiral that goes up and down while orbiting
+        // Creates a corkscrew motion around the head
+        const helixProgress = (Math.sin(t * 0.2 + phase) + 1) * 0.5; // 0 to 1 slowly
+        x += Math.cos(t + phase) * preset.radiusX;
+        y += (helixProgress - 0.5) * preset.radiusY * 2; // Up and down
+        z += Math.sin(t + phase) * preset.radiusZ;
+        // Add slight radius variation for more organic feel
+        const radiusVar = 0.8 + Math.sin(t * 0.5) * 0.2;
+        x *= radiusVar;
+        z *= radiusVar;
         break;
       }
 
-      case 'figure8': {
-        // Figure-8 / infinity pattern
+      case 'figure8Complex': {
+        // COMPLEX FIGURE-8 - 3D infinity pattern that covers full 360 space
+        // Crosses in front and behind, above and below
         x += Math.sin(t + phase) * preset.radiusX;
         y += Math.sin(t * 2 + phase) * preset.radiusY;
-        z += Math.sin(t + phase) * Math.cos(t + phase) * preset.radiusZ * 2;
+        // The key: z oscillates at different rate creating the figure-8 in 3D
+        z += Math.sin(t * 2 + phase) * Math.cos(t + phase) * preset.radiusZ;
+        // Add extra rotation for full coverage
+        const rotAngle = t * 0.1;
+        const newX = x * Math.cos(rotAngle) - z * Math.sin(rotAngle);
+        const newZ = x * Math.sin(rotAngle) + z * Math.cos(rotAngle);
+        x = newX;
+        z = newZ;
         break;
       }
 
-      case 'spiral': {
-        // Expanding/contracting spiral with vertical movement
-        const spiralPhase = (Math.sin(t * 0.25 + phase) + 1) * 0.5;
-        x += Math.cos(t * 2 + phase) * preset.radiusX * spiralPhase;
-        y += Math.sin(t * 0.5 + phase) * preset.radiusY + (1 - spiralPhase) * preset.radiusY * 0.5;
-        z += Math.sin(t * 2 + phase) * preset.radiusZ * spiralPhase;
+      case 'waveSurround': {
+        // WAVE SURROUND - Undulating wave that circles the entire head/body
+        // Like being inside a rolling wave that goes all around
+        const wavePhase = t + phase;
+        const waveHeight = Math.sin(wavePhase * 3) * 0.3 + 1; // Wave amplitude
+        x += Math.cos(wavePhase) * preset.radiusX * waveHeight;
+        y += Math.sin(wavePhase * 2) * preset.radiusY;
+        z += Math.sin(wavePhase) * preset.radiusZ * waveHeight;
+        // Add secondary wave for complexity
+        x += Math.cos(wavePhase * 1.5 + 1) * preset.radiusX * 0.2;
+        z += Math.sin(wavePhase * 1.5 + 1) * preset.radiusZ * 0.2;
         break;
       }
 
-      case 'wave': {
-        // Wave motion - smooth vertical movement with slight horizontal
-        x += Math.sin(t * 0.5 + phase) * preset.radiusX;
-        y += Math.sin(t + phase) * preset.radiusY;
-        z += Math.cos(t * 0.3 + phase) * preset.radiusZ;
-        break;
-      }
-
-      case 'bounce': {
-        // Bouncing motion with ease
-        const bounce = Math.abs(Math.sin(t + phase));
-        x += Math.sin(t * 0.3 + phase) * preset.radiusX;
-        y += bounce * preset.radiusY;
-        z += Math.cos(t * 0.3 + phase) * preset.radiusZ;
-        break;
-      }
-
-      case 'zigzag': {
-        // CRAZY ZIGZAG - sharp direction changes
-        const zigzagX = Math.sign(Math.sin(t * 3 + phase)) * Math.abs(Math.sin(t * 1.5 + phase));
-        const zigzagY = Math.sign(Math.sin(t * 2.5 + phase * 0.5)) * Math.abs(Math.cos(t * 2 + phase));
-        const zigzagZ = Math.sign(Math.cos(t * 2 + phase)) * Math.abs(Math.sin(t * 1.8 + phase));
-        x += zigzagX * preset.radiusX;
-        y += zigzagY * preset.radiusY;
-        z += zigzagZ * preset.radiusZ;
-        break;
-      }
-
-      case 'chaos': {
-        // CHAOS - multiple overlapping frequencies for unpredictable movement
-        const chaos1 = Math.sin(t * 1.1 + phase);
-        const chaos2 = Math.sin(t * 2.3 + phase * 1.5);
-        const chaos3 = Math.sin(t * 3.7 + phase * 0.7);
-        const chaos4 = Math.cos(t * 1.9 + phase * 1.2);
-        const chaos5 = Math.cos(t * 2.9 + phase * 0.3);
-        x += (chaos1 + chaos2 * 0.5 + chaos3 * 0.3) * preset.radiusX * 0.6;
-        y += (chaos2 + chaos4 * 0.5 + chaos5 * 0.3) * preset.radiusY * 0.6;
-        z += (chaos3 + chaos5 * 0.5 + chaos1 * 0.3) * preset.radiusZ * 0.6;
-        break;
-      }
-
-      case 'vortex': {
-        // VORTEX - spinning with vertical oscillation
-        const vortexSpeed = t * 1.5;
-        const vortexRadius = (Math.sin(t * 0.3 + phase) + 1) * 0.5 + 0.3;
-        x += Math.cos(vortexSpeed + phase) * preset.radiusX * vortexRadius;
-        y += Math.sin(t * 0.8 + phase) * preset.radiusY + Math.sin(t * 2 + phase) * preset.radiusY * 0.3;
-        z += Math.sin(vortexSpeed + phase) * preset.radiusZ * vortexRadius;
-        break;
-      }
-
-      case 'random': {
-        // Smooth random movement
-        const currentTime = performance.now();
-        if (currentTime - this.lastRandomUpdate > 1000 / (preset.speed * this.animationSpeed)) {
-          this.lastRandomUpdate = currentTime;
-          const rand = () => (Math.random() - 0.5) * 2;
-          this.randomTarget = {
-            x: preset.centerX + rand() * preset.radiusX,
-            y: preset.centerY + rand() * preset.radiusY,
-            z: preset.centerZ + rand() * preset.radiusZ,
-          };
-        }
-        // Smooth interpolation to random target
-        const lerpVal = (a: number, b: number, factor: number) => a + (b - a) * factor;
-        const smoothing = 0.08;
-        x = lerpVal(this.currentPosition.x, this.randomTarget.x, smoothing);
-        y = lerpVal(this.currentPosition.y, this.randomTarget.y, smoothing);
-        z = lerpVal(this.currentPosition.z, this.randomTarget.z, smoothing);
+      case 'chaosOrbit': {
+        // CHAOS ORBIT - Unpredictable but still continuous 360 movement
+        // Multiple overlapping orbital frequencies
+        const chaos1 = Math.sin(t * 1.0 + phase);
+        const chaos2 = Math.sin(t * 0.7 + phase * 1.3);
+        const chaos3 = Math.cos(t * 0.5 + phase * 0.8);
+        const chaos4 = Math.cos(t * 1.3 + phase * 0.5);
+        
+        // Primary orbit
+        x += Math.cos(t + phase) * preset.radiusX * 0.6;
+        z += Math.sin(t + phase) * preset.radiusZ * 0.6;
+        
+        // Add chaotic variations
+        x += (chaos1 * 0.3 + chaos2 * 0.2) * preset.radiusX;
+        y += (chaos3 * 0.5 + chaos4 * 0.3) * preset.radiusY;
+        z += (chaos2 * 0.3 + chaos3 * 0.2) * preset.radiusZ;
         break;
       }
 
       default:
+        // Fallback to simple orbit
+        x += Math.cos(t + phase) * preset.radiusX;
+        z += Math.sin(t + phase) * preset.radiusZ;
         break;
     }
 
