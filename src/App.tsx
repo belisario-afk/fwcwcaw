@@ -1,12 +1,33 @@
 import { useState, useEffect, useRef } from 'react'
-import AudioEngine from './AudioEngine'
+import AudioEngine, { SPATIAL_PRESETS } from './AudioEngine'
+
+interface FrequencyLevels {
+  subBass: number;
+  bass: number;
+  lowMids: number;
+  mids: number;
+  highMids: number;
+  presence: number;
+  brilliance: number;
+  air: number;
+}
 
 function App() {
   const [isInitialized, setIsInitialized] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [hasAudio, setHasAudio] = useState(false)
   const [position, setPosition] = useState({ x: 0, y: 0, z: 0 })
-  const [levels, setLevels] = useState({ bass: 0, mids: 0, highs: 0 })
+  const [levels, setLevels] = useState<FrequencyLevels>({
+    subBass: 0, bass: 0, lowMids: 0, mids: 0,
+    highMids: 0, presence: 0, brilliance: 0, air: 0
+  })
+  const [eq, setEq] = useState({ bass: 0, mid: 0, high: 0 })
+  const [volume, setVolume] = useState(1)
+  const [lerpSpeed, setLerpSpeedState] = useState(0.1)
+  const [movementSpeed, setMovementSpeedState] = useState(1)
+  const [lerpEnabled, setLerpEnabledState] = useState(true)
+  const [selectedPreset, setSelectedPreset] = useState<number | null>(null)
+  
   const audioEngine = useRef<AudioEngine | null>(null)
   const animationFrameRef = useRef<number | null>(null)
 
@@ -27,11 +48,8 @@ function App() {
 
     const updateLevels = () => {
       if (audioEngine.current) {
-        setLevels({
-          bass: audioEngine.current.getBassLevel(),
-          mids: audioEngine.current.getMidsLevel(),
-          highs: audioEngine.current.getHighsLevel(),
-        })
+        const allLevels = audioEngine.current.getAllFrequencyLevels()
+        setLevels(allLevels)
       }
       animationFrameRef.current = requestAnimationFrame(updateLevels)
     }
@@ -48,7 +66,10 @@ function App() {
 
   // Reset levels when audio stops
   const resetLevels = () => {
-    setLevels({ bass: 0, mids: 0, highs: 0 })
+    setLevels({
+      subBass: 0, bass: 0, lowMids: 0, mids: 0,
+      highMids: 0, presence: 0, brilliance: 0, air: 0
+    })
   }
 
   // Handle file input
@@ -90,156 +111,342 @@ function App() {
   const handlePositionChange = (axis: 'x' | 'y' | 'z', value: number) => {
     const newPosition = { ...position, [axis]: value }
     setPosition(newPosition)
+    setSelectedPreset(null)
     
     if (audioEngine.current) {
       audioEngine.current.setPosition(newPosition.x, newPosition.y, newPosition.z)
     }
   }
 
+  // Handle preset selection
+  const handlePresetSelect = (index: number) => {
+    setSelectedPreset(index)
+    const preset = SPATIAL_PRESETS[index]
+    setPosition({ x: preset.x, y: preset.y, z: preset.z })
+    
+    if (audioEngine.current) {
+      audioEngine.current.applyPreset(index)
+    }
+  }
+
+  // Handle EQ changes
+  const handleEqChange = (band: 'bass' | 'mid' | 'high', value: number) => {
+    setEq(prev => ({ ...prev, [band]: value }))
+    
+    if (audioEngine.current) {
+      if (band === 'bass') audioEngine.current.setBassGain(value)
+      else if (band === 'mid') audioEngine.current.setMidGain(value)
+      else audioEngine.current.setHighGain(value)
+    }
+  }
+
+  // Handle volume change
+  const handleVolumeChange = (value: number) => {
+    setVolume(value)
+    if (audioEngine.current) {
+      audioEngine.current.setVolume(value)
+    }
+  }
+
+  // Handle lerp speed change
+  const handleLerpSpeedChange = (value: number) => {
+    setLerpSpeedState(value)
+    if (audioEngine.current) {
+      audioEngine.current.setLerpSpeed(value)
+    }
+  }
+
+  // Handle movement speed change
+  const handleMovementSpeedChange = (value: number) => {
+    setMovementSpeedState(value)
+    if (audioEngine.current) {
+      audioEngine.current.setMovementSpeed(value)
+    }
+  }
+
+  // Handle lerp toggle
+  const handleLerpToggle = () => {
+    const newValue = !lerpEnabled
+    setLerpEnabledState(newValue)
+    if (audioEngine.current) {
+      audioEngine.current.setLerpEnabled(newValue)
+    }
+  }
+
+  const frequencyBands = [
+    { key: 'subBass', label: 'Sub-Bass', range: '20-60Hz', color: 'from-purple-600 to-purple-400', textColor: 'text-purple-400', description: 'Kick/Drops' },
+    { key: 'bass', label: 'Bass', range: '60-250Hz', color: 'from-blue-600 to-blue-400', textColor: 'text-blue-400', description: 'Bass Guitar' },
+    { key: 'lowMids', label: 'Low Mids', range: '250-500Hz', color: 'from-cyan-600 to-cyan-400', textColor: 'text-cyan-400', description: 'Snare/Toms' },
+    { key: 'mids', label: 'Mids', range: '500-2kHz', color: 'from-green-600 to-green-400', textColor: 'text-green-400', description: 'Vocals' },
+    { key: 'highMids', label: 'High Mids', range: '2-4kHz', color: 'from-yellow-600 to-yellow-400', textColor: 'text-yellow-400', description: 'Clarity' },
+    { key: 'presence', label: 'Presence', range: '4-6kHz', color: 'from-orange-600 to-orange-400', textColor: 'text-orange-400', description: 'Cymbals' },
+    { key: 'brilliance', label: 'Brilliance', range: '6-12kHz', color: 'from-red-600 to-red-400', textColor: 'text-red-400', description: 'Hi-Hats' },
+    { key: 'air', label: 'Air', range: '12-20kHz', color: 'from-pink-600 to-pink-400', textColor: 'text-pink-400', description: 'Shimmer' },
+  ] as const
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gray-900 text-white p-4 md:p-8">
+      <div className="max-w-6xl mx-auto">
         <h1 className="text-3xl font-bold text-center mb-8 text-purple-400">
           3D Spatial Audio Player
         </h1>
 
-        {/* File Input */}
-        <div className="mb-8">
-          <label className="block text-sm font-medium text-gray-300 mb-2">
-            Load Audio File
-          </label>
-          <input
-            type="file"
-            accept="audio/*"
-            onChange={handleFileChange}
-            className="block w-full text-sm text-gray-300
-              file:mr-4 file:py-2 file:px-4
-              file:rounded-lg file:border-0
-              file:text-sm file:font-semibold
-              file:bg-purple-600 file:text-white
-              hover:file:bg-purple-700
-              cursor-pointer"
-          />
-        </div>
-
-        {/* Play/Pause Button */}
-        <div className="mb-8 flex justify-center">
-          <button
-            onClick={togglePlayPause}
-            disabled={!hasAudio}
-            className={`px-8 py-3 rounded-lg font-semibold text-lg transition-all
-              ${hasAudio 
-                ? 'bg-purple-600 hover:bg-purple-700 cursor-pointer' 
-                : 'bg-gray-600 cursor-not-allowed opacity-50'}`}
-          >
-            {isPlaying ? '⏸ Pause' : '▶ Play'}
-          </button>
-        </div>
-
-        {/* Position Sliders */}
-        <div className="mb-8 space-y-6 bg-gray-800 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-purple-400 mb-4">
-            3D Position Controls
-          </h2>
-          
-          {(['x', 'y', 'z'] as const).map((axis) => (
-            <div key={axis} className="space-y-2">
-              <div className="flex justify-between items-center">
-                <label className="text-sm font-medium text-gray-300 uppercase">
-                  {axis} Position
-                </label>
-                <span className="text-sm text-purple-400 font-mono">
-                  {position[axis].toFixed(1)}
-                </span>
-              </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column */}
+          <div className="space-y-6">
+            {/* File Input & Play Button */}
+            <div className="bg-gray-800 p-6 rounded-lg">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Load Audio File
+              </label>
               <input
-                type="range"
-                min="-5"
-                max="5"
-                step="0.1"
-                value={position[axis]}
-                onChange={(e) => handlePositionChange(axis, parseFloat(e.target.value))}
-                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer
-                  [&::-webkit-slider-thumb]:appearance-none
-                  [&::-webkit-slider-thumb]:w-4
-                  [&::-webkit-slider-thumb]:h-4
-                  [&::-webkit-slider-thumb]:bg-purple-500
-                  [&::-webkit-slider-thumb]:rounded-full
-                  [&::-webkit-slider-thumb]:cursor-pointer
-                  [&::-moz-range-thumb]:w-4
-                  [&::-moz-range-thumb]:h-4
-                  [&::-moz-range-thumb]:bg-purple-500
-                  [&::-moz-range-thumb]:rounded-full
-                  [&::-moz-range-thumb]:border-0
-                  [&::-moz-range-thumb]:cursor-pointer"
+                type="file"
+                accept="audio/*"
+                onChange={handleFileChange}
+                className="block w-full text-sm text-gray-300 mb-4
+                  file:mr-4 file:py-2 file:px-4
+                  file:rounded-lg file:border-0
+                  file:text-sm file:font-semibold
+                  file:bg-purple-600 file:text-white
+                  hover:file:bg-purple-700
+                  cursor-pointer"
               />
-              <div className="flex justify-between text-xs text-gray-500">
-                <span>-5</span>
-                <span>0</span>
-                <span>5</span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Frequency Levels Display */}
-        <div className="bg-gray-800 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold text-purple-400 mb-4">
-            Frequency Levels
-          </h2>
-          
-          <div className="space-y-4">
-            {/* Bass Level */}
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-300">
-                  Bass (0-250Hz)
-                </span>
-                <span className="text-sm text-blue-400 font-mono">
-                  {levels.bass.toFixed(1)}%
-                </span>
-              </div>
-              <div className="w-full h-4 bg-gray-700 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-blue-600 to-blue-400 transition-all duration-75"
-                  style={{ width: `${levels.bass}%` }}
-                />
+              <div className="flex gap-4 items-center">
+                <button
+                  onClick={togglePlayPause}
+                  disabled={!hasAudio}
+                  className={`px-8 py-3 rounded-lg font-semibold text-lg transition-all
+                    ${hasAudio 
+                      ? 'bg-purple-600 hover:bg-purple-700 cursor-pointer' 
+                      : 'bg-gray-600 cursor-not-allowed opacity-50'}`}
+                >
+                  {isPlaying ? '⏸ Pause' : '▶ Play'}
+                </button>
+                <div className="flex-1">
+                  <label className="text-xs text-gray-400">Volume</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={volume}
+                    onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer
+                      [&::-webkit-slider-thumb]:appearance-none
+                      [&::-webkit-slider-thumb]:w-4
+                      [&::-webkit-slider-thumb]:h-4
+                      [&::-webkit-slider-thumb]:bg-purple-500
+                      [&::-webkit-slider-thumb]:rounded-full"
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Mids Level */}
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-300">
-                  Mids (250-2000Hz)
-                </span>
-                <span className="text-sm text-green-400 font-mono">
-                  {levels.mids.toFixed(1)}%
-                </span>
-              </div>
-              <div className="w-full h-4 bg-gray-700 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-green-600 to-green-400 transition-all duration-75"
-                  style={{ width: `${levels.mids}%` }}
-                />
+            {/* Presets */}
+            <div className="bg-gray-800 p-6 rounded-lg">
+              <h2 className="text-xl font-semibold text-purple-400 mb-4">
+                Position Presets
+              </h2>
+              <div className="grid grid-cols-5 md:grid-cols-6 gap-2">
+                {SPATIAL_PRESETS.map((preset, index) => (
+                  <button
+                    key={preset.name}
+                    onClick={() => handlePresetSelect(index)}
+                    className={`px-2 py-2 rounded text-xs font-medium transition-all
+                      ${selectedPreset === index 
+                        ? 'bg-purple-600 text-white' 
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
+                  >
+                    {preset.name}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Highs Level */}
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-300">
-                  Highs (2000-20000Hz)
-                </span>
-                <span className="text-sm text-yellow-400 font-mono">
-                  {levels.highs.toFixed(1)}%
-                </span>
+            {/* 3D Position Controls */}
+            <div className="bg-gray-800 p-6 rounded-lg">
+              <h2 className="text-xl font-semibold text-purple-400 mb-4">
+                3D Position Controls
+              </h2>
+              
+              {(['x', 'y', 'z'] as const).map((axis) => (
+                <div key={axis} className="mb-4">
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-sm font-medium text-gray-300 uppercase">
+                      {axis} {axis === 'x' ? '(Left/Right)' : axis === 'y' ? '(Up/Down)' : '(Front/Back)'}
+                    </label>
+                    <span className="text-sm text-purple-400 font-mono">
+                      {position[axis].toFixed(2)}
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-5"
+                    max="5"
+                    step="0.05"
+                    value={position[axis]}
+                    onChange={(e) => handlePositionChange(axis, parseFloat(e.target.value))}
+                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer
+                      [&::-webkit-slider-thumb]:appearance-none
+                      [&::-webkit-slider-thumb]:w-4
+                      [&::-webkit-slider-thumb]:h-4
+                      [&::-webkit-slider-thumb]:bg-purple-500
+                      [&::-webkit-slider-thumb]:rounded-full"
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Advanced Spatial Controls */}
+            <div className="bg-gray-800 p-6 rounded-lg">
+              <h2 className="text-xl font-semibold text-purple-400 mb-4">
+                Advanced Spatial Controls
+              </h2>
+              
+              {/* Lerp Toggle */}
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm text-gray-300">Smooth Movement (Lerp)</span>
+                <button
+                  onClick={handleLerpToggle}
+                  className={`px-4 py-1 rounded-full text-sm font-medium transition-all
+                    ${lerpEnabled 
+                      ? 'bg-green-600 text-white' 
+                      : 'bg-gray-600 text-gray-300'}`}
+                >
+                  {lerpEnabled ? 'ON' : 'OFF'}
+                </button>
               </div>
-              <div className="w-full h-4 bg-gray-700 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-yellow-600 to-yellow-400 transition-all duration-75"
-                  style={{ width: `${levels.highs}%` }}
+
+              {/* Lerp Speed */}
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-sm text-gray-300">Lerp Speed</label>
+                  <span className="text-sm text-purple-400 font-mono">{lerpSpeed.toFixed(2)}</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.01"
+                  max="1"
+                  step="0.01"
+                  value={lerpSpeed}
+                  onChange={(e) => handleLerpSpeedChange(parseFloat(e.target.value))}
+                  disabled={!lerpEnabled}
+                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer
+                    disabled:opacity-50
+                    [&::-webkit-slider-thumb]:appearance-none
+                    [&::-webkit-slider-thumb]:w-4
+                    [&::-webkit-slider-thumb]:h-4
+                    [&::-webkit-slider-thumb]:bg-purple-500
+                    [&::-webkit-slider-thumb]:rounded-full"
                 />
+              </div>
+
+              {/* Movement Speed */}
+              <div>
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-sm text-gray-300">Movement Speed</label>
+                  <span className="text-sm text-purple-400 font-mono">{movementSpeed.toFixed(1)}x</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="5"
+                  step="0.1"
+                  value={movementSpeed}
+                  onChange={(e) => handleMovementSpeedChange(parseFloat(e.target.value))}
+                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer
+                    [&::-webkit-slider-thumb]:appearance-none
+                    [&::-webkit-slider-thumb]:w-4
+                    [&::-webkit-slider-thumb]:h-4
+                    [&::-webkit-slider-thumb]:bg-purple-500
+                    [&::-webkit-slider-thumb]:rounded-full"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="space-y-6">
+            {/* EQ Controls */}
+            <div className="bg-gray-800 p-6 rounded-lg">
+              <h2 className="text-xl font-semibold text-purple-400 mb-4">
+                Equalizer (EQ)
+              </h2>
+              
+              <div className="grid grid-cols-3 gap-4">
+                {(['bass', 'mid', 'high'] as const).map((band) => (
+                  <div key={band} className="text-center">
+                    <label className="text-sm font-medium text-gray-300 capitalize mb-2 block">
+                      {band}
+                    </label>
+                    <div className="flex flex-col items-center">
+                      <span className="text-xs text-purple-400 font-mono mb-1">
+                        {eq[band] > 0 ? '+' : ''}{eq[band].toFixed(0)} dB
+                      </span>
+                      <input
+                        type="range"
+                        min="-12"
+                        max="12"
+                        step="1"
+                        value={eq[band]}
+                        onChange={(e) => handleEqChange(band, parseFloat(e.target.value))}
+                        className="w-full h-24 bg-gray-700 rounded-lg appearance-none cursor-pointer
+                          [writing-mode:vertical-lr]
+                          [direction:rtl]
+                          [&::-webkit-slider-thumb]:appearance-none
+                          [&::-webkit-slider-thumb]:w-4
+                          [&::-webkit-slider-thumb]:h-4
+                          [&::-webkit-slider-thumb]:bg-purple-500
+                          [&::-webkit-slider-thumb]:rounded-full"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="mt-4 text-center">
+                <button
+                  onClick={() => {
+                    handleEqChange('bass', 0)
+                    handleEqChange('mid', 0)
+                    handleEqChange('high', 0)
+                  }}
+                  className="px-4 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm text-gray-300"
+                >
+                  Reset EQ
+                </button>
+              </div>
+            </div>
+
+            {/* Frequency Levels Display */}
+            <div className="bg-gray-800 p-6 rounded-lg">
+              <h2 className="text-xl font-semibold text-purple-400 mb-4">
+                Frequency Levels
+              </h2>
+              
+              <div className="space-y-3">
+                {frequencyBands.map(({ key, label, range, color, textColor, description }) => (
+                  <div key={key} className="space-y-1">
+                    <div className="flex justify-between items-center text-xs">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-300">{label}</span>
+                        <span className="text-gray-500">({range})</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500">{description}</span>
+                        <span className={`font-mono ${textColor}`}>
+                          {levels[key].toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+                    <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full bg-gradient-to-r ${color} transition-all duration-75`}
+                        style={{ width: `${Math.min(100, levels[key])}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -247,8 +454,8 @@ function App() {
 
         {/* Instructions */}
         <div className="mt-8 text-center text-gray-500 text-sm">
-          <p>Load an audio file and use the sliders to pan the sound in 3D space.</p>
-          <p>X: Left/Right | Y: Up/Down | Z: Front/Back</p>
+          <p>Load an audio file and use the controls to adjust spatial positioning and sound.</p>
+          <p className="mt-1">Presets provide accurate body positions. Use lerp for smooth audio transitions.</p>
         </div>
       </div>
     </div>
