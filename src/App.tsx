@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import AudioEngine, { SPATIAL_PRESETS } from './AudioEngine'
+import AudioEngine, { MOVEMENT_PRESETS } from './AudioEngine'
 
 interface FrequencyLevels {
   subBass: number;
@@ -27,6 +27,8 @@ function App() {
   const [movementSpeed, setMovementSpeedState] = useState(1)
   const [lerpEnabled, setLerpEnabledState] = useState(true)
   const [selectedPreset, setSelectedPreset] = useState<number | null>(null)
+  const [isPresetAnimating, setIsPresetAnimating] = useState(false)
+  const [animationSpeed, setAnimationSpeedState] = useState(1)
   
   const audioEngine = useRef<AudioEngine | null>(null)
   const animationFrameRef = useRef<number | null>(null)
@@ -112,20 +114,38 @@ function App() {
     const newPosition = { ...position, [axis]: value }
     setPosition(newPosition)
     setSelectedPreset(null)
+    setIsPresetAnimating(false)
     
     if (audioEngine.current) {
+      audioEngine.current.stopAnimation()
       audioEngine.current.setPosition(newPosition.x, newPosition.y, newPosition.z)
     }
   }
 
-  // Handle preset selection
+  // Handle preset selection - starts movement animation
   const handlePresetSelect = (index: number) => {
-    setSelectedPreset(index)
-    const preset = SPATIAL_PRESETS[index]
-    setPosition({ x: preset.x, y: preset.y, z: preset.z })
-    
+    if (selectedPreset === index && isPresetAnimating) {
+      // Clicking same preset stops animation
+      setSelectedPreset(null)
+      setIsPresetAnimating(false)
+      if (audioEngine.current) {
+        audioEngine.current.stopAnimation()
+      }
+    } else {
+      setSelectedPreset(index)
+      setIsPresetAnimating(true)
+      
+      if (audioEngine.current) {
+        audioEngine.current.applyPreset(index)
+      }
+    }
+  }
+
+  // Handle animation speed change
+  const handleAnimationSpeedChange = (value: number) => {
+    setAnimationSpeedState(value)
     if (audioEngine.current) {
-      audioEngine.current.applyPreset(index)
+      audioEngine.current.setAnimationSpeed(value)
     }
   }
 
@@ -242,24 +262,54 @@ function App() {
               </div>
             </div>
 
-            {/* Presets */}
+            {/* Movement Presets */}
             <div className="bg-gray-800 p-6 rounded-lg">
-              <h2 className="text-xl font-semibold text-purple-400 mb-4">
-                Position Presets
-              </h2>
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-purple-400">
+                  Movement Presets
+                </h2>
+                {isPresetAnimating && (
+                  <span className="text-xs text-green-400 animate-pulse">● Active</span>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mb-3">Click to start/stop movement pattern</p>
               <div className="grid grid-cols-5 md:grid-cols-6 gap-2">
-                {SPATIAL_PRESETS.map((preset, index) => (
+                {MOVEMENT_PRESETS.map((preset, index) => (
                   <button
                     key={preset.name}
                     onClick={() => handlePresetSelect(index)}
                     className={`px-2 py-2 rounded text-xs font-medium transition-all
-                      ${selectedPreset === index 
-                        ? 'bg-purple-600 text-white' 
+                      ${selectedPreset === index && isPresetAnimating
+                        ? 'bg-purple-600 text-white ring-2 ring-purple-400 animate-pulse' 
+                        : selectedPreset === index
+                        ? 'bg-purple-600 text-white'
                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}`}
                   >
                     {preset.name}
                   </button>
                 ))}
+              </div>
+              
+              {/* Animation Speed Control */}
+              <div className="mt-4">
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-sm text-gray-300">Animation Speed</label>
+                  <span className="text-sm text-purple-400 font-mono">{animationSpeed.toFixed(1)}x</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="3"
+                  step="0.1"
+                  value={animationSpeed}
+                  onChange={(e) => handleAnimationSpeedChange(parseFloat(e.target.value))}
+                  className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer
+                    [&::-webkit-slider-thumb]:appearance-none
+                    [&::-webkit-slider-thumb]:w-4
+                    [&::-webkit-slider-thumb]:h-4
+                    [&::-webkit-slider-thumb]:bg-purple-500
+                    [&::-webkit-slider-thumb]:rounded-full"
+                />
               </div>
             </div>
 

@@ -3,46 +3,85 @@
  * Uses Web Audio API with HRTF panning model
  */
 
-// Preset positions for spatial audio (relative to listener at origin)
-export interface SpatialPreset {
+// Movement pattern types
+export type PatternType = 'orbit' | 'pendulum' | 'figure8' | 'spiral' | 'wave' | 'bounce' | 'random';
+
+// Movement preset interface - animated spatial patterns
+export interface MovementPreset {
   name: string;
-  x: number;
-  y: number;
-  z: number;
+  pattern: PatternType;
+  centerX: number;
+  centerY: number;
+  centerZ: number;
+  radiusX: number;
+  radiusY: number;
+  radiusZ: number;
+  speed: number; // Cycles per second
+  phase: number; // Starting phase offset (0-1)
 }
 
-// 30 Presets for different body/spatial positions
-export const SPATIAL_PRESETS: SpatialPreset[] = [
-  { name: 'preset1', x: 0, y: 1.7, z: 0.3 },      // Front of head
-  { name: 'preset2', x: 0, y: 1.7, z: -0.3 },     // Back of head
-  { name: 'preset3', x: 0.15, y: 1.65, z: 0 },    // Right ear
-  { name: 'preset4', x: -0.15, y: 1.65, z: 0 },   // Left ear
-  { name: 'preset5', x: 0, y: 1.5, z: 0.2 },      // Front neck
-  { name: 'preset6', x: 0, y: 1.5, z: -0.2 },     // Back neck
-  { name: 'preset7', x: 0.3, y: 1.4, z: 0 },      // Right shoulder
-  { name: 'preset8', x: -0.3, y: 1.4, z: 0 },     // Left shoulder
-  { name: 'preset9', x: 0, y: 1.3, z: 0.2 },      // Upper chest
-  { name: 'preset10', x: 0, y: 1.1, z: 0.2 },     // Mid chest
-  { name: 'preset11', x: 0, y: 1.3, z: -0.2 },    // Upper back
-  { name: 'preset12', x: 0, y: 1.0, z: -0.2 },    // Mid back
-  { name: 'preset13', x: 0.5, y: 1.0, z: 0 },     // Right arm
-  { name: 'preset14', x: -0.5, y: 1.0, z: 0 },    // Left arm
-  { name: 'preset15', x: 0.7, y: 0.8, z: 0 },     // Right hand
-  { name: 'preset16', x: -0.7, y: 0.8, z: 0 },    // Left hand
-  { name: 'preset17', x: 0, y: 0.9, z: 0.15 },    // Stomach
-  { name: 'preset18', x: 0, y: 0.9, z: -0.15 },   // Lower back
-  { name: 'preset19', x: 0.15, y: 0.5, z: 0 },    // Right hip
-  { name: 'preset20', x: -0.15, y: 0.5, z: 0 },   // Left hip
-  { name: 'preset21', x: 0.15, y: 0.3, z: 0 },    // Right thigh
-  { name: 'preset22', x: -0.15, y: 0.3, z: 0 },   // Left thigh
-  { name: 'preset23', x: 0.15, y: 0, z: 0 },      // Right knee
-  { name: 'preset24', x: -0.15, y: 0, z: 0 },     // Left knee
-  { name: 'preset25', x: 0.1, y: -0.4, z: 0 },    // Right foot
-  { name: 'preset26', x: -0.1, y: -0.4, z: 0 },   // Left foot
-  { name: 'preset27', x: 2, y: 1.5, z: 0 },       // Far right
-  { name: 'preset28', x: -2, y: 1.5, z: 0 },      // Far left
-  { name: 'preset29', x: 0, y: 1.5, z: 2 },       // Far front
-  { name: 'preset30', x: 0, y: 1.5, z: -2 },      // Far back
+// 30 Movement presets with unique orbiting patterns and sensations
+export const MOVEMENT_PRESETS: MovementPreset[] = [
+  // Ear whispers - gentle side to side
+  { name: 'preset1', pattern: 'pendulum', centerX: 0, centerY: 1.65, centerZ: 0, radiusX: 0.2, radiusY: 0, radiusZ: 0, speed: 0.3, phase: 0 },
+  // Slow neck orbit - sensual circular motion around neck
+  { name: 'preset2', pattern: 'orbit', centerX: 0, centerY: 1.5, centerZ: 0, radiusX: 0.15, radiusY: 0, radiusZ: 0.15, speed: 0.2, phase: 0 },
+  // Neck back and forth - intimate whisper pattern
+  { name: 'preset3', pattern: 'pendulum', centerX: 0, centerY: 1.5, centerZ: 0, radiusX: 0, radiusY: 0, radiusZ: 0.25, speed: 0.25, phase: 0 },
+  // Head orbit - full circle around head
+  { name: 'preset4', pattern: 'orbit', centerX: 0, centerY: 1.7, centerZ: 0, radiusX: 0.3, radiusY: 0, radiusZ: 0.3, speed: 0.15, phase: 0 },
+  // Ear to ear figure 8 - hypnotic pattern
+  { name: 'preset5', pattern: 'figure8', centerX: 0, centerY: 1.65, centerZ: 0, radiusX: 0.2, radiusY: 0.05, radiusZ: 0.1, speed: 0.2, phase: 0 },
+  // Shoulder caress - gentle shoulder movement
+  { name: 'preset6', pattern: 'pendulum', centerX: 0, centerY: 1.4, centerZ: 0, radiusX: 0.4, radiusY: 0, radiusZ: 0, speed: 0.3, phase: 0 },
+  // Spine descend - vertical wave down back
+  { name: 'preset7', pattern: 'wave', centerX: 0, centerY: 1.2, centerZ: -0.2, radiusX: 0, radiusY: 0.4, radiusZ: 0, speed: 0.2, phase: 0 },
+  // Intimate close orbit - very close ear whisper
+  { name: 'preset8', pattern: 'orbit', centerX: 0, centerY: 1.65, centerZ: 0, radiusX: 0.08, radiusY: 0, radiusZ: 0.08, speed: 0.4, phase: 0 },
+  // Wide head spiral - expanding/contracting
+  { name: 'preset9', pattern: 'spiral', centerX: 0, centerY: 1.7, centerZ: 0, radiusX: 0.5, radiusY: 0, radiusZ: 0.5, speed: 0.1, phase: 0 },
+  // Chest heart pattern - figure 8 over chest
+  { name: 'preset10', pattern: 'figure8', centerX: 0, centerY: 1.2, centerZ: 0.15, radiusX: 0.2, radiusY: 0.15, radiusZ: 0, speed: 0.25, phase: 0 },
+  // Fast ear switch - quick left-right
+  { name: 'preset11', pattern: 'pendulum', centerX: 0, centerY: 1.65, centerZ: 0, radiusX: 0.18, radiusY: 0, radiusZ: 0, speed: 0.8, phase: 0 },
+  // Slow dreamy orbit - relaxing wide circle
+  { name: 'preset12', pattern: 'orbit', centerX: 0, centerY: 1.6, centerZ: 0, radiusX: 0.6, radiusY: 0.1, radiusZ: 0.6, speed: 0.08, phase: 0 },
+  // Neck nuzzle - intimate neck focus
+  { name: 'preset13', pattern: 'orbit', centerX: 0, centerY: 1.5, centerZ: 0.1, radiusX: 0.1, radiusY: 0.05, radiusZ: 0.1, speed: 0.35, phase: 0 },
+  // Behind ear whisper - focused back of ear
+  { name: 'preset14', pattern: 'pendulum', centerX: 0, centerY: 1.65, centerZ: -0.1, radiusX: 0.12, radiusY: 0, radiusZ: 0.05, speed: 0.3, phase: 0 },
+  // Full body wave - top to bottom sensation
+  { name: 'preset15', pattern: 'wave', centerX: 0, centerY: 1.0, centerZ: 0, radiusX: 0.2, radiusY: 0.8, radiusZ: 0, speed: 0.12, phase: 0 },
+  // Diagonal cross - dynamic X pattern
+  { name: 'preset16', pattern: 'figure8', centerX: 0, centerY: 1.5, centerZ: 0, radiusX: 0.4, radiusY: 0.3, radiusZ: 0, speed: 0.18, phase: 0.25 },
+  // Random intimate - unpredictable close
+  { name: 'preset17', pattern: 'random', centerX: 0, centerY: 1.6, centerZ: 0, radiusX: 0.15, radiusY: 0.1, radiusZ: 0.15, speed: 0.5, phase: 0 },
+  // Collarbone trace - horizontal collarbone
+  { name: 'preset18', pattern: 'pendulum', centerX: 0, centerY: 1.45, centerZ: 0.12, radiusX: 0.25, radiusY: 0, radiusZ: 0, speed: 0.22, phase: 0 },
+  // Spiral descent - ear to shoulder spiral
+  { name: 'preset19', pattern: 'spiral', centerX: 0, centerY: 1.55, centerZ: 0, radiusX: 0.2, radiusY: 0.15, radiusZ: 0.2, speed: 0.15, phase: 0 },
+  // Bounce effect - gentle vertical bounce
+  { name: 'preset20', pattern: 'bounce', centerX: 0, centerY: 1.6, centerZ: 0.1, radiusX: 0, radiusY: 0.15, radiusZ: 0, speed: 0.5, phase: 0 },
+  // Wide panorama - cinema-like sweep
+  { name: 'preset21', pattern: 'pendulum', centerX: 0, centerY: 1.5, centerZ: 0, radiusX: 1.5, radiusY: 0, radiusZ: 0, speed: 0.1, phase: 0 },
+  // Intimate breath - very slow close
+  { name: 'preset22', pattern: 'orbit', centerX: 0, centerY: 1.65, centerZ: 0.05, radiusX: 0.05, radiusY: 0.02, radiusZ: 0.05, speed: 0.15, phase: 0 },
+  // Dynamic surround - full 3D movement
+  { name: 'preset23', pattern: 'spiral', centerX: 0, centerY: 1.5, centerZ: 0, radiusX: 0.4, radiusY: 0.2, radiusZ: 0.4, speed: 0.2, phase: 0 },
+  // Temple pulse - side of head focus
+  { name: 'preset24', pattern: 'bounce', centerX: 0.15, centerY: 1.7, centerZ: 0, radiusX: 0.05, radiusY: 0, radiusZ: 0.08, speed: 0.6, phase: 0 },
+  // Hypnotic slow - mesmerizing pace
+  { name: 'preset25', pattern: 'orbit', centerX: 0, centerY: 1.65, centerZ: 0, radiusX: 0.25, radiusY: 0, radiusZ: 0.25, speed: 0.05, phase: 0 },
+  // Energetic circle - fast exciting orbit
+  { name: 'preset26', pattern: 'orbit', centerX: 0, centerY: 1.6, centerZ: 0, radiusX: 0.35, radiusY: 0, radiusZ: 0.35, speed: 0.6, phase: 0 },
+  // Gentle rock - soothing pendulum
+  { name: 'preset27', pattern: 'pendulum', centerX: 0, centerY: 1.55, centerZ: 0.1, radiusX: 0.15, radiusY: 0.05, radiusZ: 0, speed: 0.18, phase: 0 },
+  // 3D figure 8 - complex immersive
+  { name: 'preset28', pattern: 'figure8', centerX: 0, centerY: 1.6, centerZ: 0, radiusX: 0.3, radiusY: 0.1, radiusZ: 0.3, speed: 0.15, phase: 0 },
+  // Close whisper circle - ASMR style
+  { name: 'preset29', pattern: 'orbit', centerX: 0, centerY: 1.65, centerZ: 0.02, radiusX: 0.06, radiusY: 0, radiusZ: 0.06, speed: 0.25, phase: 0 },
+  // Random surround - unpredictable full
+  { name: 'preset30', pattern: 'random', centerX: 0, centerY: 1.5, centerZ: 0, radiusX: 0.5, radiusY: 0.2, radiusZ: 0.5, speed: 0.3, phase: 0 },
 ];
 
 class AudioEngine {
@@ -70,6 +109,14 @@ class AudioEngine {
   private lerpSpeed = 0.1; // 0-1, higher = faster
   private movementSpeed = 1; // Multiplier for position changes
   private isLerpEnabled = true;
+
+  // Movement animation system
+  private activePreset: MovementPreset | null = null;
+  private animationStartTime: number = 0;
+  private isAnimating: boolean = false;
+  private animationSpeed: number = 1; // Global speed multiplier
+  private lastRandomUpdate: number = 0;
+  private randomTarget = { x: 0, y: 0, z: 0 };
 
   // Frequency band ranges
   private readonly SAMPLE_RATE = 44100;
@@ -279,13 +326,147 @@ class AudioEngine {
   }
 
   /**
-   * Apply a preset position
+   * Apply a movement preset - starts animated movement pattern
    */
   public applyPreset(presetIndex: number): void {
-    if (presetIndex >= 0 && presetIndex < SPATIAL_PRESETS.length) {
-      const preset = SPATIAL_PRESETS[presetIndex];
-      this.setPosition(preset.x, preset.y, preset.z);
+    if (presetIndex >= 0 && presetIndex < MOVEMENT_PRESETS.length) {
+      const preset = MOVEMENT_PRESETS[presetIndex];
+      this.activePreset = preset;
+      this.animationStartTime = performance.now();
+      this.isAnimating = true;
+      this.randomTarget = { 
+        x: preset.centerX, 
+        y: preset.centerY, 
+        z: preset.centerZ 
+      };
     }
+  }
+
+  /**
+   * Stop the current movement animation
+   */
+  public stopAnimation(): void {
+    this.isAnimating = false;
+    this.activePreset = null;
+  }
+
+  /**
+   * Check if animation is active
+   */
+  public isAnimationActive(): boolean {
+    return this.isAnimating;
+  }
+
+  /**
+   * Get the active preset index
+   */
+  public getActivePresetIndex(): number {
+    if (!this.activePreset) return -1;
+    return MOVEMENT_PRESETS.findIndex(p => p.name === this.activePreset?.name);
+  }
+
+  /**
+   * Set animation speed multiplier
+   */
+  public setAnimationSpeed(speed: number): void {
+    this.animationSpeed = Math.max(0.1, Math.min(3, speed));
+  }
+
+  /**
+   * Get animation speed multiplier
+   */
+  public getAnimationSpeed(): number {
+    return this.animationSpeed;
+  }
+
+  /**
+   * Calculate position based on movement pattern
+   */
+  private calculatePatternPosition(preset: MovementPreset, time: number): { x: number; y: number; z: number } {
+    const t = time * preset.speed * this.animationSpeed * Math.PI * 2;
+    const phase = preset.phase * Math.PI * 2;
+    
+    let x = preset.centerX;
+    let y = preset.centerY;
+    let z = preset.centerZ;
+
+    switch (preset.pattern) {
+      case 'orbit': {
+        // Circular orbit in XZ plane
+        x += Math.cos(t + phase) * preset.radiusX;
+        y += Math.sin(t * 0.5 + phase) * preset.radiusY;
+        z += Math.sin(t + phase) * preset.radiusZ;
+        break;
+      }
+
+      case 'pendulum': {
+        // Swinging motion
+        x += Math.sin(t + phase) * preset.radiusX;
+        y += Math.sin(t * 2 + phase) * preset.radiusY * 0.5;
+        z += Math.sin(t * 0.5 + phase) * preset.radiusZ;
+        break;
+      }
+
+      case 'figure8': {
+        // Figure-8 / infinity pattern
+        x += Math.sin(t + phase) * preset.radiusX;
+        y += Math.sin(t * 2 + phase) * preset.radiusY;
+        z += Math.sin(t + phase) * Math.cos(t + phase) * preset.radiusZ * 2;
+        break;
+      }
+
+      case 'spiral': {
+        // Expanding/contracting spiral
+        const spiralPhase = (Math.sin(t * 0.25 + phase) + 1) * 0.5; // 0 to 1
+        x += Math.cos(t + phase) * preset.radiusX * spiralPhase;
+        y += Math.sin(t * 0.5 + phase) * preset.radiusY;
+        z += Math.sin(t + phase) * preset.radiusZ * spiralPhase;
+        break;
+      }
+
+      case 'wave': {
+        // Wave motion - smooth vertical movement with slight horizontal
+        x += Math.sin(t * 0.5 + phase) * preset.radiusX;
+        y += Math.sin(t + phase) * preset.radiusY;
+        z += Math.cos(t * 0.3 + phase) * preset.radiusZ;
+        break;
+      }
+
+      case 'bounce': {
+        // Bouncing motion with ease
+        const bounce = Math.abs(Math.sin(t + phase));
+        x += Math.sin(t * 0.3 + phase) * preset.radiusX;
+        y += bounce * preset.radiusY;
+        z += Math.cos(t * 0.3 + phase) * preset.radiusZ;
+        break;
+      }
+
+      case 'random': {
+        // Smooth random movement
+        const currentTime = performance.now();
+        if (currentTime - this.lastRandomUpdate > 1000 / (preset.speed * this.animationSpeed)) {
+          this.lastRandomUpdate = currentTime;
+          const rand = () => (Math.random() - 0.5) * 2;
+          this.randomTarget = {
+            x: preset.centerX + rand() * preset.radiusX,
+            y: preset.centerY + rand() * preset.radiusY,
+            z: preset.centerZ + rand() * preset.radiusZ,
+          };
+        }
+        // Smooth interpolation to random target
+        const lerpVal = (a: number, b: number, factor: number) => a + (b - a) * factor;
+        const smoothing = 0.05;
+        x = lerpVal(this.currentPosition.x, this.randomTarget.x, smoothing);
+        y = lerpVal(this.currentPosition.y, this.randomTarget.y, smoothing);
+        z = lerpVal(this.currentPosition.z, this.randomTarget.z, smoothing);
+        break;
+      }
+
+      default:
+        break;
+    }
+
+    return { x, y, z };
   }
 
   /**
@@ -295,7 +476,21 @@ class AudioEngine {
     const lerp = (start: number, end: number, t: number) => start + (end - start) * t;
     
     const updatePosition = () => {
-      if (this.isLerpEnabled && this.pannerNode) {
+      // Handle movement preset animation
+      if (this.isAnimating && this.activePreset && this.pannerNode) {
+        const elapsedTime = (performance.now() - this.animationStartTime) / 1000;
+        const newPos = this.calculatePatternPosition(this.activePreset, elapsedTime);
+        
+        // Apply movement speed multiplier to horizontal axes only
+        // Y-axis (vertical) is not scaled to maintain realistic head-level audio
+        this.currentPosition.x = newPos.x * this.movementSpeed;
+        this.currentPosition.y = newPos.y;
+        this.currentPosition.z = newPos.z * this.movementSpeed;
+        
+        this.pannerNode.setPosition(this.currentPosition.x, this.currentPosition.y, this.currentPosition.z);
+      }
+      // Handle manual position lerp (when not animating)
+      else if (this.isLerpEnabled && this.pannerNode && !this.isAnimating) {
         const dx = this.targetPosition.x - this.currentPosition.x;
         const dy = this.targetPosition.y - this.currentPosition.y;
         const dz = this.targetPosition.z - this.currentPosition.z;
