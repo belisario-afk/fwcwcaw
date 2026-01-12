@@ -20,22 +20,22 @@ export interface MovementPreset {
   phase: number; // Starting phase offset (0-1)
 }
 
-// 5 COMPLEX 360-DEGREE ORBITING PRESETS - Long-lasting, truly moving patterns
+// 5 COMPLEX ROOM-SCALE 360-DEGREE ORBITING PRESETS - Orbits all around like a room
 export const MOVEMENT_PRESETS: MovementPreset[] = [
-  // PRESET 1: Full 360 Head Orbit - Complete circle around head, slow and immersive
-  { name: 'preset1', pattern: 'fullOrbit360', centerX: 0, centerY: 1.65, centerZ: 0, radiusX: 0.8, radiusY: 0.3, radiusZ: 0.8, speed: 0.08, phase: 0 },
+  // PRESET 1: Room Orbit - Complete circle around the entire room, far walls
+  { name: 'preset1', pattern: 'fullOrbit360', centerX: 0, centerY: 0, centerZ: 0, radiusX: 4.0, radiusY: 1.5, radiusZ: 4.0, speed: 0.03, phase: 0 },
   
-  // PRESET 2: Helix Spiral - Spiraling up and down while orbiting 360
-  { name: 'preset2', pattern: 'helixSpiral', centerX: 0, centerY: 1.5, centerZ: 0, radiusX: 0.7, radiusY: 0.6, radiusZ: 0.7, speed: 0.06, phase: 0 },
+  // PRESET 2: Vertical Room Spiral - Floor to ceiling spiral around room
+  { name: 'preset2', pattern: 'helixSpiral', centerX: 0, centerY: 0, centerZ: 0, radiusX: 3.5, radiusY: 3.0, radiusZ: 3.5, speed: 0.025, phase: 0 },
   
-  // PRESET 3: Complex Figure-8 - 3D figure-8 that covers full 360 space
-  { name: 'preset3', pattern: 'figure8Complex', centerX: 0, centerY: 1.6, centerZ: 0, radiusX: 0.9, radiusY: 0.5, radiusZ: 0.9, speed: 0.05, phase: 0 },
+  // PRESET 3: Room Figure-8 - Wall to wall infinity pattern
+  { name: 'preset3', pattern: 'figure8Complex', centerX: 0, centerY: 0, centerZ: 0, radiusX: 4.5, radiusY: 2.0, radiusZ: 4.5, speed: 0.02, phase: 0 },
   
-  // PRESET 4: Wave Surround - Undulating wave that circles entire head/body
-  { name: 'preset4', pattern: 'waveSurround', centerX: 0, centerY: 1.55, centerZ: 0, radiusX: 1.0, radiusY: 0.4, radiusZ: 1.0, speed: 0.07, phase: 0 },
+  // PRESET 4: Surround Wave - Undulating wave around entire room perimeter
+  { name: 'preset4', pattern: 'waveSurround', centerX: 0, centerY: 0, centerZ: 0, radiusX: 5.0, radiusY: 2.5, radiusZ: 5.0, speed: 0.035, phase: 0 },
   
-  // PRESET 5: Chaos Orbit - Unpredictable but continuous 360 movement
-  { name: 'preset5', pattern: 'chaosOrbit', centerX: 0, centerY: 1.6, centerZ: 0, radiusX: 0.85, radiusY: 0.5, radiusZ: 0.85, speed: 0.04, phase: 0 },
+  // PRESET 5: Chaos Room - Unpredictable movement filling entire room space
+  { name: 'preset5', pattern: 'chaosOrbit', centerX: 0, centerY: 0, centerZ: 0, radiusX: 4.0, radiusY: 2.0, radiusZ: 4.0, speed: 0.015, phase: 0 },
 ];
 
 class AudioEngine {

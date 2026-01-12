@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import AudioEngine, { MOVEMENT_PRESETS } from './AudioEngine'
+import LSDVisualizer from './LSDVisualizer'
 
 interface FrequencyLevels {
   subBass: number;
@@ -29,6 +30,7 @@ function App() {
   const [selectedPreset, setSelectedPreset] = useState<number | null>(null)
   const [isPresetAnimating, setIsPresetAnimating] = useState(false)
   const [animationSpeed, setAnimationSpeedState] = useState(1)
+  const [frequencyData, setFrequencyData] = useState<Uint8Array | null>(null)
   
   const audioEngine = useRef<AudioEngine | null>(null)
   const animationFrameRef = useRef<number | null>(null)
@@ -52,6 +54,11 @@ function App() {
       if (audioEngine.current) {
         const allLevels = audioEngine.current.getAllFrequencyLevels()
         setLevels(allLevels)
+        // Get raw frequency data for visualizer - copy needed as buffer is reused
+        const rawData = audioEngine.current.getFrequencyData()
+        if (rawData.length > 0) {
+          setFrequencyData(new Uint8Array(rawData))
+        }
       }
       animationFrameRef.current = requestAnimationFrame(updateLevels)
     }
@@ -417,6 +424,14 @@ function App() {
 
           {/* Right Column */}
           <div className="space-y-6">
+            {/* LSD Visualizer */}
+            <div className="bg-gray-800 p-6 rounded-lg">
+              <h2 className="text-xl font-semibold text-purple-400 mb-4">
+                Visualizer
+              </h2>
+              <LSDVisualizer frequencyData={frequencyData} isPlaying={isPlaying} />
+            </div>
+
             {/* EQ Controls */}
             <div className="bg-gray-800 p-6 rounded-lg">
               <h2 className="text-xl font-semibold text-purple-400 mb-4">
